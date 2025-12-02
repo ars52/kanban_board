@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.settings import settings
 from src.routers import router
 from src.routers.v1.auth import auth
@@ -11,8 +12,20 @@ from src.routers.v1.task_logs import router_task_logs
 from src.routers.v1.tasks import router_tasks
 
 
-debug = settings.SERVER_TEST
 app = FastAPI()
+
+# Разрешаем CORS для dev-фронтенда (Vite на http://localhost:3000)
+origins = [
+    "http://localhost:3000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(router_users)
 app.include_router(auth)
@@ -21,6 +34,8 @@ app.include_router(router_project_users)
 app.include_router(router_projects)
 app.include_router(router_task_logs)
 app.include_router(router_tasks)
+
+
 if __name__ == "__main__":
     uvicorn.run(
         app,

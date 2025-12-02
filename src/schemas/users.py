@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 
 
@@ -11,8 +11,8 @@ class ProfileUpdateRequest(BaseModel):
 
 # for crud
 class UserBase(BaseModel):
-    first_name: str
-    last_name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     middle_name: Optional[str] = None
     gender: Optional[str] = None
     email: str
@@ -29,5 +29,4 @@ class UserUpdate(BaseModel):
 class UserOut(UserBase):
     id: int
 
-    class Config:
-        model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)

@@ -172,5 +172,3 @@ cython_debug/
 .pypirc
 
 postgres_data/
-
-.DS_Store

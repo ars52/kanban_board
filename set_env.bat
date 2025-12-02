@@ -1,0 +1,9 @@
+@echo off
+set DB_USERNAME=postgres
+set DB_PASSWORD=postgres
+set DB_NAME=my_db_name
+set DB_ADDR=172.18.0.2
+set DB_PORT=5432
+set SERVER_ADDR=0.0.0.0
+set SERVER_PORT=8000
+set SERVER_TEST=true 
