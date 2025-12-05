@@ -5,8 +5,14 @@ from src.models.user import User
 from src.schemas.users import ProfileUpdateRequest, UserOut, UserUpdate
 from typing import List
 from src.crud.users import get_users, get_user, update_user, delete_user
+from src.core.services.auth_for_users import get_current_user_from_token
 
 router_users = APIRouter(prefix="/users", tags=["users"])
+
+
+@router_users.get("/me", response_model=UserOut)
+def get_me(current_user: User = Depends(get_current_user_from_token)):
+    return current_user
 
 
 @router_users.patch("/profile/{user_id}")
