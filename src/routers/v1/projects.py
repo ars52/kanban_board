@@ -2,15 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
 from src.core.services.db import get_db
-from src.crud.projects import get_all_projects, get_project, create_project, update_project, delete_project
+from src.crud.projects import get_all_projects, get_project, create_project, update_project, delete_project, get_user_projects
 from src.schemas.projects import ProjectCreate, ProjectOut, ProjectUpdate
+from src.models.user import User
+from src.core.services.auth_for_users import get_current_user_from_token
 
 router_projects = APIRouter(prefix="/projects", tags=["projects"])
 
 
 @router_projects.get("/", response_model=List[ProjectOut])
-def list_projects(db: Session = Depends(get_db)):
-    return get_all_projects(db)
+def list_projects(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    return get_user_projects(db, current_user.id)
 
 
 @router_projects.get("/{project_id}", response_model=ProjectOut)
@@ -22,7 +27,13 @@ def read_project(project_id: int, db: Session = Depends(get_db)):
 
 
 @router_projects.post("/", response_model=ProjectOut)
-def create_project_endpoint(data: ProjectCreate, db: Session = Depends(get_db)):
+def create_project_endpoint(
+    data: ProjectCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    # Force created_by to be the current user
+    data.created_by = current_user.id
     return create_project(db, data)
 
 

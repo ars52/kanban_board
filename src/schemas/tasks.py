@@ -10,10 +10,14 @@ class TaskBase(BaseModel):
     title:        str
     description:  str
     is_finished:  bool = False
+    position:     int = 0
 
 
-class TaskCreate(TaskBase):
-    pass
+class TaskCreate(BaseModel):
+    column_id:   int
+    title:       str
+    description: str
+    assigned_to: Optional[int] = None
 
 
 class TaskUpdate(BaseModel):
@@ -23,6 +27,7 @@ class TaskUpdate(BaseModel):
     title:        Optional[str] = None
     description:  Optional[str] = None
     is_finished:  Optional[bool] = None
+    position:     Optional[int] = None
     finished_at:  Optional[datetime.datetime] = None
 
 

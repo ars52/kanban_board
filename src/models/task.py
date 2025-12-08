@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, Text, DateTime, ForeignKey
+from sqlalchemy import String, Boolean, Text, DateTime, ForeignKey, Integer
 import datetime
 from .base import Base
 
@@ -14,6 +14,7 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
     is_finished: Mapped[bool] = mapped_column(Boolean, default=False)
+    position: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, default=datetime.datetime.utcnow)
     finished_at: Mapped[datetime.datetime] = mapped_column(
