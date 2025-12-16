@@ -25,4 +25,4 @@ class Task(Base):
         foreign_keys=[created_by], back_populates="created_tasks")
     assignee: Mapped["User"] = relationship(
         foreign_keys=[assigned_to], back_populates="assigned_tasks")
-    logs: Mapped[list["TaskLog"]] = relationship(back_populates="task")
+    logs: Mapped[list["TaskLog"]] = relationship(back_populates="task", cascade="all, delete-orphan")

@@ -34,6 +34,9 @@ def create_project(db: Session, data: ProjectCreate) -> Project:
         for idx, col_name in enumerate(data.columns):
             db.add(Column(project_id=obj.id, name=col_name, position=idx))
 
+    # Add creator to project_user
+    db.add(ProjectUser(project_id=obj.id, user_id=obj.created_by))
+
     if data.member_emails:
         users_to_add = db.query(User).filter(User.email.in_(data.member_emails)).all()
         for user in users_to_add:
