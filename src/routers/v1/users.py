@@ -15,7 +15,7 @@ def get_me(current_user: User = Depends(get_current_user_from_token)):
     return current_user
 
 
-@router_users.patch("/profile/{user_id}")
+@router_users.patch("/profile/{user_id}", response_model=UserOut)
 async def update_profile(
     user_id: int,
     request: ProfileUpdateRequest,
@@ -35,7 +35,8 @@ async def update_profile(
         user.gender = request.gender
 
     db.commit()
-    return {"message": "Профиль обновлен"}
+    db.refresh(user)
+    return user
 
 
 @router_users.get("/", response_model=List[UserOut])

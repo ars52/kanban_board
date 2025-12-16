@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from src.models.task import Task
 from src.models.column import Column
+from src.models.task_log import TaskLog
+from src.models.user import User
 from src.schemas.tasks import TaskCreate, TaskUpdate
 
 
@@ -33,7 +35,7 @@ def create_task(db: Session, data: TaskCreate, user_id: int) -> Task:
     return obj
 
 
-def move_task(db: Session, task_id: int, new_column_id: int, new_position: int) -> Task | None:
+def move_task(db: Session, task_id: int, new_column_id: int, new_position: int, user_id: int | None = None) -> Task | None:
     task = get_task(db, task_id)
     if not task:
         return None
@@ -72,6 +74,15 @@ def move_task(db: Session, task_id: int, new_column_id: int, new_position: int) 
             Task.position >= new_position
         ).update({Task.position: Task.position + 1}, synchronize_session=False)
 
+        # Log column change
+        if user_id:
+            author = db.get(User, user_id)
+            new_column = db.get(Column, new_column_id)
+            if author and new_column:
+                author_name = f"{author.first_name} {author.last_name}".strip() or author.email
+                log = TaskLog(task_id=task_id, user_id=user_id, message=f"{author_name} переместил задачу в колонку \"{new_column.name}\"")
+                db.add(log)
+
     task.column_id = new_column_id
     task.position = new_position
     db.commit()
@@ -79,11 +90,48 @@ def move_task(db: Session, task_id: int, new_column_id: int, new_position: int) 
     return task
 
 
-def update_task(db: Session, task_id: int, data: TaskUpdate) -> Task | None:
+def update_task(db: Session, task_id: int, data: TaskUpdate, user_id: int | None = None) -> Task | None:
     obj = get_task(db, task_id)
     if not obj:
         return None
-    for k, v in data.model_dump(exclude_unset=True).items():
+    
+    updates = data.model_dump(exclude_unset=True)
+
+    if user_id:
+        author = db.get(User, user_id)
+        if author:
+            author_name = f"{author.first_name} {author.last_name}".strip() or author.email
+            
+            if 'title' in updates and updates['title'] != obj.title:
+                 log = TaskLog(task_id=task_id, user_id=user_id, message=f"{author_name} изменил название задачи")
+                 db.add(log)
+
+            if 'description' in updates and updates['description'] != obj.description:
+                log = TaskLog(task_id=task_id, user_id=user_id, message=f"{author_name} изменил описание задачи")
+                db.add(log)
+            
+            if 'column_id' in updates and updates['column_id'] != obj.column_id:
+                 new_column = db.get(Column, updates['column_id'])
+                 if new_column:
+                     log = TaskLog(task_id=task_id, user_id=user_id, message=f"{author_name} переместил задачу в колонку \"{new_column.name}\"")
+                     db.add(log)
+
+            if 'assigned_to' in updates and updates['assigned_to'] != obj.assigned_to:
+                new_assignee_id = updates['assigned_to']
+                if new_assignee_id:
+                    new_assignee = db.get(User, new_assignee_id)
+                    if new_assignee:
+                        assignee_name = f"{new_assignee.first_name} {new_assignee.last_name}".strip() or new_assignee.email
+                        message = f"{author_name} передал задачу {assignee_name}"
+                    else:
+                         message = f"{author_name} изменил исполнителя"
+                else:
+                    message = f"{author_name} удалил исполнителя"
+                
+                log = TaskLog(task_id=task_id, user_id=user_id, message=message)
+                db.add(log)
+
+    for k, v in updates.items():
         setattr(obj, k, v)
     db.commit()
     db.refresh(obj)
